@@ -1,0 +1,13 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{626A39FB-40C9-EEB4-EC04-05B339E9D21C}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "PlayFabLobbyTestApp",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
