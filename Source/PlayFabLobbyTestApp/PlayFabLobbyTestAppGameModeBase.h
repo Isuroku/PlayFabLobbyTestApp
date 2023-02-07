@@ -13,5 +13,6 @@ UCLASS()
 class PLAYFABLOBBYTESTAPP_API APlayFabLobbyTestAppGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+public:
+	APlayFabLobbyTestAppGameModeBase();
 };
