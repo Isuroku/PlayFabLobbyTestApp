@@ -360,14 +360,11 @@ void ATestPlayfabPlayerController::OnCreateLobby(const PlayFab::MultiplayerModel
 	
 	WriteLog(FString::Printf(TEXT("OnCreateLobby for %s: %s"), *PlayerName_, *InResult.toJSONString()));
 
-	PlayFab::MultiplayerModels::FEntityKey CreatorEntityKey;
-	CreatorEntityKey.Id = PlayfabTitlePlayerID_;
-	CreatorEntityKey.Type = PlayfabTitlePlayerIDFieldName;
-	
 	PlayFab::MultiplayerModels::FSubscribeToLobbyResourceRequest Request;
 
 	Request.Type = PlayFab::MultiplayerModels::SubscriptionTypeLobbyChange;
-	Request.pfEntityKey =  CreatorEntityKey;
+	Request.pfEntityKey.Id = PlayfabTitlePlayerID_;
+	Request.pfEntityKey.Type = PlayfabTitlePlayerIDFieldName;
 	Request.ResourceId = LobbyId_;
 	Request.SubscriptionVersion = 1;
 

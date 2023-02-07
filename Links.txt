@@ -1,0 +1,46 @@
+Lobby API overview
+https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/multiplayer/lobby/lobby-rest-apis-overview.md
+
+Create searchable lobbies
+https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/multiplayer/lobby/define-search-keywords.md
+https://learn.microsoft.com/en-us/gaming/playfab/features/multiplayer/lobby/define-search-keywords
+
+Find lobbies
+https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/multiplayer/lobby/find-lobbies.md
+
+Q
+Can't Find the Lobby
+https://community.playfab.com/questions/64911/cant-find-the-lobby-2.html
+
+
+
+
+Real-time notifications for Lobby and Matchmaking APIs
+https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/real-time-notifications/overview.md
+
+Subscribing to resources
+https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/real-time-notifications/subscribing-to-resources.md
+
+Lobby - Subscribe To Lobby Resource
+https://learn.microsoft.com/en-us/rest/api/playfab/multiplayer/lobby/subscribe-to-lobby-resource?view=playfab-rest
+
+SignalR
+https://learn.microsoft.com/en-us/gaming/playfab/features/real-time-notifications/signalr-hub
+
+How do I connect a SignalR client to PlayFab to get realtime lobby changes?
+https://community.playfab.com/questions/65975/how-do-i-connect-a-signalr-client-to-playfab-to-ge.html
+
+Unreal-SignalR
+https://github.com/FrozenStormInteractive/Unreal-SignalR
+
+Unity project 
+https://github.com/ExtraMedicated/unity-multiplayer-testing/blob/alt-api-testing/Assets/_Game/Scripts/Networking/LobbyUtility.cs
+
+Getting 401 when connecting to SignalR
+https://community.playfab.com/questions/64333/getting-401-when-connecting-to-signalr.html
+https://community.playfab.com/questions/47071/unauthorized-response-when-trying-to-get-user-data.html
+
+https://community.playfab.com/idea/67603/add-pubsub-or-notifications-service.html
+
+Implementing Lobby notifications with
+https://community.playfab.com/questions/62372/implementing-lobby-notifications-with-c-and-micros.html
