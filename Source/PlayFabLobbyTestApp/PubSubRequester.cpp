@@ -46,7 +46,7 @@ void FPubSubRequester::Start(const FString& InTitleId, const FString& InEntityTo
 	Hub_->Start();
 }
 
-void FPubSubRequester::OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonObject)
+void FPubSubRequester::OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonObject, bool InReconnecting)
 {
 	UE_LOG(LogTemp, Log, TEXT("OnNegotiationCompleteSuccess"));
 
@@ -71,9 +71,9 @@ void FPubSubRequester::OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonOb
 	Hub_->StartWebSocket(RedirectUrl);
 }
 
-void FPubSubRequester::OnHubConnected()
+void FPubSubRequester::OnHubConnected(bool InReconnecting)
 {
-	UE_LOG(PubSubRequester, Log, TEXT("Hub connected!"));
+	UE_LOG(PubSubRequester, Log, TEXT("Hub connected! InReconnecting: %d"), InReconnecting);
 
 	TMap<FString, FSignalRValue> Arguments;
 	//PlayFab SignalR doesn't request a value of traceParent. 
@@ -81,7 +81,7 @@ void FPubSubRequester::OnHubConnected()
 	Arguments.Emplace(TEXT("traceParent"), FSignalRValue(CreateTraceParent()));
 	Arguments.Emplace(TEXT("oldConnectionHandle"), FSignalRValue(ConnectionHandle_));
 	
-	Hub_->Invoke(TEXT("StartOrRecoverSession"), Arguments).BindLambda([Self = TWeakPtr<FPubSubRequester>(AsShared())](const FSignalRInvokeResult& Result)
+	Hub_->Invoke(TEXT("StartOrRecoverSession"), Arguments).BindLambda([Self = TWeakPtr<FPubSubRequester>(AsShared()), InReconnecting](const FSignalRInvokeResult& Result)
 	{
 		if (TSharedPtr<FPubSubRequester> SharedSelf = Self.Pin())
 			if(SharedSelf.IsValid())
@@ -104,7 +104,7 @@ void FPubSubRequester::OnHubConnected()
 							SharedSelf->ConnectionHandle_ = Params[NewConnectionHandleKey].AsString();
 							UE_LOG(LogTemp, Log, TEXT("StartOrRecoverSessionSuccess: %s"), *SharedSelf->ConnectionHandle_);
 							
-							SharedSelf->OpenSessionSuccessHandle_.Broadcast(SharedSelf->ConnectionHandle_);
+							SharedSelf->OpenSessionSuccessHandle_.Broadcast(SharedSelf->ConnectionHandle_, InReconnecting);
 						}
 						else
 						{

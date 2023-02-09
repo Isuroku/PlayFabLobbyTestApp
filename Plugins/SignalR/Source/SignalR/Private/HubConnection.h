@@ -45,6 +45,8 @@ public:
     virtual void Start() override;
     virtual void Stop() override;
 
+    void Start(bool InReconnecting);
+
     virtual void AddNegotiateHeader(const FString& InKey, const FString& InValue) override;
     virtual void AddWebSocketHeader(const FString& InKey, const FString& InValue) override;
 

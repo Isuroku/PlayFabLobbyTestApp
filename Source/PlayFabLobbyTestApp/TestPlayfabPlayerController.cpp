@@ -32,10 +32,6 @@ void ATestPlayfabPlayerController::BeginPlay()
 
 void ATestPlayfabPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if(PubSubRequester_.IsValid())
-		PubSubRequester_->Stop();
-	PubSubRequester_.Reset();
-	
 	if(HasMMTicket())
 		StopMM();
 
@@ -262,11 +258,12 @@ void ATestPlayfabPlayerController::OnSignalRSessionOpenError(const FString& InEr
 	WriteLog( FString::Printf(TEXT("OnSignalRSessionOpenError: %s"), *InError));
 }
 
-void ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess(const FString& InConnectionHandle)
+void ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess(const FString& InConnectionHandle, bool InReconnecting)
 {
-	WriteLog( FString::Printf(TEXT("OnSignalRSessionOpenSuccess, ConnectionHandle: %s"), *InConnectionHandle));
+	WriteLog( FString::Printf(TEXT("OnSignalRSessionOpenSuccess, ConnectionHandle: %s; InReconnecting: %d"), *InConnectionHandle, InReconnecting));
 
-	CreateLobby();
+	if(!InReconnecting)
+		CreateLobby();
 }
 
 void ATestPlayfabPlayerController::CreateLobby()
@@ -521,7 +518,7 @@ void ATestPlayfabPlayerController::FindLobby(const TArray<FString>& InSearchPara
 	PlayFab::UPlayFabMultiplayerAPI::FFindLobbiesDelegate OnSuccess;
 	OnSuccess.BindUObject(this, &ATestPlayfabPlayerController::OnFindLobbies);
 	PlayFab::FPlayFabErrorDelegate OnError;
-	OnError.BindUObject(this, &ATestPlayfabPlayerController::OnCreateLobbyError);
+	OnError.BindUObject(this, &ATestPlayfabPlayerController::OnFindLobbiesError);
 
 	const bool RequestResult = PlayFab::UPlayFabMultiplayerAPI().FindLobbies(Request, OnSuccess, OnError);
 
@@ -622,6 +619,10 @@ void ATestPlayfabPlayerController::LeaveLobby()
 		WriteLog(FString::Printf(TEXT("LeaveLobby Error for %s: Lobby Id is empty"), *PlayerName_));
 		return;
 	}
+
+	if(PubSubRequester_.IsValid())
+		PubSubRequester_->Stop();
+	PubSubRequester_.Reset();
 	
 	PlayFab::MultiplayerModels::FLeaveLobbyRequest Request;
 	

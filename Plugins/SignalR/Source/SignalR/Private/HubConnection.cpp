@@ -76,13 +76,18 @@ void FHubConnection::ClearWebSocketHeader()
 
 void FHubConnection::Start()
 {
+    Start(false);
+}
+
+void FHubConnection::Start(bool InReconnecting)
+{
     if (ConnectionState != EConnectionState::Disconnected)
     {
         UE_LOG(LogSignalR, Error, TEXT("Hub connection can only be started if it is in the disconnected state"));
         return;
     }
     ConnectionState = EConnectionState::Connecting;
-    Connection->Connect();
+    Connection->Connect(InReconnecting);
 }
 
 void FHubConnection::Stop()
@@ -169,7 +174,7 @@ void FHubConnection::ProcessMessage(const FString& InMessageStr)
             {
                 bHandshakeReceived = true;
                 ConnectionState = EConnectionState::Connected;
-                OnHubConnectedEvent.Broadcast();
+                OnHubConnectedEvent.Broadcast(Connection->WasReconnectingOnNegotiate());
 
                 MessageStr = Res.Get<1>();
 
@@ -290,7 +295,7 @@ void FHubConnection::OnConnectionError(const FString& InError)
     {
         bShouldReconnect = false;
         UE_LOG(LogSignalR, Verbose, TEXT("Reconnecting"));
-        Start();
+        Start(true);
     }
 }
 
@@ -315,7 +320,7 @@ void FHubConnection::OnConnectionClosed(int32 StatusCode, const FString& Reason,
         {
             bShouldReconnect = false;
             UE_LOG(LogSignalR, Verbose, TEXT("Reconnecting"));
-            Start();
+            Start(true);
         }
     }
 }

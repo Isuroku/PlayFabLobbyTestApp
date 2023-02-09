@@ -82,9 +82,9 @@ void USignalRHubConnectionWrapper::OnInvokeCompleted(const FSignalRInvokeResult&
     Delegate.ExecuteIfBound(Result);
 }
 
-void USignalRHubConnectionWrapper::BroadcastOnHubConnected()
+void USignalRHubConnectionWrapper::BroadcastOnHubConnected(bool InReconnecting)
 {
-    OnHubConnected.Broadcast();
+    OnHubConnected.Broadcast(InReconnecting);
 }
 
 void USignalRHubConnectionWrapper::BroadcastOnHubConnectionError(const FString& InError)

@@ -16,15 +16,15 @@ public:
 	DECLARE_EVENT_OneParam(FPubSubRequester, FOnOpenSessionErrorEvent, const FString& /* InError */);
 	FOnOpenSessionErrorEvent& OnOpenSessionError() { return OpenSessionErrorHandle_; }
 
-	DECLARE_EVENT_OneParam(FPubSubRequester, FOnOpenSessionSuccessEvent, const FString& /* InConnectionHandle */);
+	DECLARE_EVENT_TwoParams(FPubSubRequester, FOnOpenSessionSuccessEvent, const FString& /* InConnectionHandle */, bool /*InReconnecting*/);
 	FOnOpenSessionSuccessEvent& OnOpenSessionSuccess() { return OpenSessionSuccessHandle_; }
 
 private:
 	FOnOpenSessionErrorEvent OpenSessionErrorHandle_;
 	FOnOpenSessionSuccessEvent OpenSessionSuccessHandle_;
 
-	void OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonObject);
-	void OnHubConnected();
+	void OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonObject, bool InReconnecting);
+	void OnHubConnected(bool InReconnecting);
 	void OnHubConnectionError(const FString& InError);
 
 	static FString CreateTraceParent();

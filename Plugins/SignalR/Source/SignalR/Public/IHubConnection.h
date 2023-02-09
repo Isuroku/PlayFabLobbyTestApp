@@ -116,7 +116,7 @@ public:
     /**
      * Delegate called when a connection has been established successfully.
      */
-    DECLARE_EVENT(IHubConnection, FOnHubConnectedEvent);
+    DECLARE_EVENT_OneParam(IHubConnection, FOnHubConnectedEvent, bool /*InReconnecting*/);
     virtual FOnHubConnectedEvent& OnConnected() = 0;
 
     /**

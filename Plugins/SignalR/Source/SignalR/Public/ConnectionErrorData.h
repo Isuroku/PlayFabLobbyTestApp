@@ -18,4 +18,4 @@ struct SIGNALR_API FConnectionErrorData
 };
 
 DECLARE_DELEGATE_OneParam(FOnHubNegotiationCompleteFailEvent, const FConnectionErrorData& /*InErrorData*/ )
-DECLARE_DELEGATE_OneParam(FOnHubNegotiationCompleteSuccessEvent, TSharedPtr<FJsonObject> /*InJsonObject*/ )
+DECLARE_DELEGATE_TwoParams(FOnHubNegotiationCompleteSuccessEvent, TSharedPtr<FJsonObject> /*InJsonObject*/, bool /*InReconnecting*/ )

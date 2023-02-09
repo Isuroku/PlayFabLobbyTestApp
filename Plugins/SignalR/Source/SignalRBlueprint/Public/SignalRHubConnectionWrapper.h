@@ -37,7 +37,7 @@ class SIGNALRBLUEPRINT_API USignalRHubConnectionWrapper : public UObject
 {
     GENERATED_BODY()
 public:
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHubConnectedEvent);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHubConnectedEvent, bool, InReconnecting);
     UPROPERTY(BlueprintAssignable)
     FOnHubConnectedEvent OnHubConnected;
 
@@ -68,7 +68,7 @@ public:
 private:
     void OnInvokeCompleted(const FSignalRInvokeResult& Result, FOnInvokeCompleted Delegate);
 
-    void BroadcastOnHubConnected();
+    void BroadcastOnHubConnected(bool InReconnecting);
     void BroadcastOnHubConnectionError(const FString& Error);
     void BroadcastOnHubConnectionClosed();
 

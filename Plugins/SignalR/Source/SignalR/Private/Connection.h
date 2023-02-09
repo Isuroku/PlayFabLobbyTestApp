@@ -34,9 +34,11 @@ class SIGNALR_API FConnection : public TSharedFromThis<FConnection>
 public:
     FConnection(const FString& InHost);
 
-    void Connect();
+    void Connect(bool InReconnecting);
 
     bool IsConnected();
+
+    bool WasReconnectingOnNegotiate() const { return ReconnectingOnNegotiate; }
 
     void Send(const FString& Data);
 
@@ -63,9 +65,9 @@ public:
     void StartWebSocket();
 
 private:
-    void Negotiate();
+    void Negotiate(bool InReconnecting);
     void OnNegotiateResponse(FHttpRequestPtr InRequest, FHttpResponsePtr InResponse, bool bConnectedSuccessfully);
-    void OnNegotiateResponseOld(FHttpRequestPtr InRequest, FHttpResponsePtr InResponse, bool bConnectedSuccessfully);
+    //void OnNegotiateResponseOld(FHttpRequestPtr InRequest, FHttpResponsePtr InResponse, bool bConnectedSuccessfully);
 
     static bool CheckAvailableTransports(TSharedPtr<FJsonObject> InJsonObject);
 
@@ -85,6 +87,8 @@ private:
 
     FOnHubNegotiationCompleteSuccessEvent OnNegotiationCompleteHandlerSuccess;
     FOnHubNegotiationCompleteFailEvent OnNegotiationCompleteHandlerFail;
+
+    bool ReconnectingOnNegotiate = false;
 
     static FString ConvertToWebsocketUrl(const FString& Url);
 };

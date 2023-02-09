@@ -92,7 +92,7 @@ protected:
 	void OnSubscribeToLobbyError(const PlayFab::FPlayFabCppError& InError);
 
 	void OnSignalRSessionOpenError(const FString& InError);
-	void OnSignalRSessionOpenSuccess(const FString& InConnectionHandle);
+	void OnSignalRSessionOpenSuccess(const FString& InConnectionHandle, bool InReconnecting);
 
 	void OnJoinLobby(const PlayFab::MultiplayerModels::FJoinLobbyResult& InResult);
 	void OnJoinLobbyError(const PlayFab::FPlayFabCppError& InError);
