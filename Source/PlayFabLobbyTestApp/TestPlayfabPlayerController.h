@@ -88,11 +88,13 @@ protected:
 	void OnFindLobbies(const PlayFab::MultiplayerModels::FFindLobbiesResult& InResult);
 	void OnFindLobbiesError(const PlayFab::FPlayFabCppError& InError);
 
+	void SubscribeToLobbyChange();
 	void OnSubscribeToLobby(const PlayFab::MultiplayerModels::FSubscribeToLobbyResourceResult& InResult);
 	void OnSubscribeToLobbyError(const PlayFab::FPlayFabCppError& InError);
 
 	void OnSignalRSessionOpenError(const FString& InError);
 	void OnSignalRSessionOpenSuccess(const FString& InConnectionHandle, bool InReconnecting);
+	void OnSignalRSessionClosed(bool InUnexpected);
 
 	void OnJoinLobby(const PlayFab::MultiplayerModels::FJoinLobbyResult& InResult);
 	void OnJoinLobbyError(const PlayFab::FPlayFabCppError& InError);

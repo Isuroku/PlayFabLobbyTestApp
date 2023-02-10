@@ -19,13 +19,18 @@ public:
 	DECLARE_EVENT_TwoParams(FPubSubRequester, FOnOpenSessionSuccessEvent, const FString& /* InConnectionHandle */, bool /*InReconnecting*/);
 	FOnOpenSessionSuccessEvent& OnOpenSessionSuccess() { return OpenSessionSuccessHandle_; }
 
+	DECLARE_EVENT_OneParam(FPubSubRequester, FOnCloseSessionEvent, bool /*InUnexpected*/);
+	FOnCloseSessionEvent& OnCloseSession() { return CloseSessionHandle_; }
+
 private:
 	FOnOpenSessionErrorEvent OpenSessionErrorHandle_;
 	FOnOpenSessionSuccessEvent OpenSessionSuccessHandle_;
+	FOnCloseSessionEvent CloseSessionHandle_;
 
 	void OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonObject, bool InReconnecting);
 	void OnHubConnected(bool InReconnecting);
 	void OnHubConnectionError(const FString& InError);
+	void OnHubClosed(bool InUnexpected);
 
 	static FString CreateTraceParent();
 

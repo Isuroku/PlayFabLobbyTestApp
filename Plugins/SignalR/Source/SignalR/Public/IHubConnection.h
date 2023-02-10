@@ -132,7 +132,7 @@ public:
      * Delegate called when a web socket connection has been closed.
      *
      */
-    DECLARE_EVENT(IHubConnection, FHubConnectionClosedEvent);
+    DECLARE_EVENT_OneParam(IHubConnection, FHubConnectionClosedEvent, bool /*InUnexpected*/);
     virtual FHubConnectionClosedEvent& OnClosed() = 0;
 
     virtual void StartWebSocket(const FString& InWebSocketHost) = 0;

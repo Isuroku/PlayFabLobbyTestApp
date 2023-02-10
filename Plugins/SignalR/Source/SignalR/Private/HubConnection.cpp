@@ -311,7 +311,7 @@ void FHubConnection::OnConnectionClosed(int32 StatusCode, const FString& Reason,
         CallbackManager.Clear(TEXT("Connection was stopped before invocation result was received."));
 	}
     ConnectionState = EConnectionState::Disconnected;
-    OnHubConnectionClosedEvent.Broadcast();
+    OnHubConnectionClosedEvent.Broadcast(!bReceivedCloseMessage);
 
     if (bReceivedCloseMessage)
     {

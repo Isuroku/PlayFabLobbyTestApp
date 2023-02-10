@@ -45,7 +45,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnHubConnectionErrorEvent OnHubConnectionError;
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHubConnectionClosedEvent);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHubConnectionClosedEvent, bool, InUnexpected);
     UPROPERTY(BlueprintAssignable)
     FOnHubConnectionClosedEvent OnHubConnectionClosed;
 
@@ -70,7 +70,7 @@ private:
 
     void BroadcastOnHubConnected(bool InReconnecting);
     void BroadcastOnHubConnectionError(const FString& Error);
-    void BroadcastOnHubConnectionClosed();
+    void BroadcastOnHubConnectionClosed(bool InUnexpected);
 
     TSharedPtr<IHubConnection> HubConnection;
 };

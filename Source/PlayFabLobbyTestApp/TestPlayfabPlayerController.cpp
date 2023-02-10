@@ -250,6 +250,7 @@ void ATestPlayfabPlayerController::SignalRLogin()
 	PubSubRequester_ = MakeShareable(new FPubSubRequester());
 	PubSubRequester_->OnOpenSessionError().AddUObject(this, &ATestPlayfabPlayerController::OnSignalRSessionOpenError);
 	PubSubRequester_->OnOpenSessionSuccess().AddUObject(this, &ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess);
+	PubSubRequester_->OnCloseSession().AddUObject(this, &ATestPlayfabPlayerController::OnSignalRSessionClosed);
 	PubSubRequester_->Start(TitleID_, EntityToken_);
 }
 
@@ -264,6 +265,11 @@ void ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess(const FString& In
 
 	if(!InReconnecting)
 		CreateLobby();
+}
+
+void ATestPlayfabPlayerController::OnSignalRSessionClosed(bool InUnexpected)
+{
+	WriteLog( FString::Printf(TEXT("OnSignalRSessionClosed, InUnexpected: %d"), InUnexpected));
 }
 
 void ATestPlayfabPlayerController::CreateLobby()
@@ -357,6 +363,13 @@ void ATestPlayfabPlayerController::OnCreateLobby(const PlayFab::MultiplayerModel
 	
 	WriteLog(FString::Printf(TEXT("OnCreateLobby for %s: %s"), *PlayerName_, *InResult.toJSONString()));
 
+	SubscribeToLobbyChange();
+}
+
+void ATestPlayfabPlayerController::SubscribeToLobbyChange()
+{
+	WriteLog(FString::Printf(TEXT("SubscribeToLobbyChange for %s"), *PlayerName_));
+	
 	PlayFab::MultiplayerModels::FSubscribeToLobbyResourceRequest Request;
 
 	Request.Type = PlayFab::MultiplayerModels::SubscriptionTypeLobbyChange;
@@ -390,7 +403,7 @@ void ATestPlayfabPlayerController::OnCreateLobby(const PlayFab::MultiplayerModel
 	//	"SubscriptionVersion":0,
 	//	"Type":"LobbyChange"
 	//}
-	WriteLog(FString::Printf(TEXT("OnCreateLobby for %s; RequestResult: %d; RequestString: %s"), *PlayerName_, RequestResult, *RequestString));
+	WriteLog(FString::Printf(TEXT("OnCreateLobby for %s; RequestResult: %d; RequestString: %s"), *PlayerName_, RequestResult, *RequestString));	
 }
 
 void ATestPlayfabPlayerController::OnSubscribeToLobby(const PlayFab::MultiplayerModels::FSubscribeToLobbyResourceResult& InResult)

@@ -92,7 +92,7 @@ void USignalRHubConnectionWrapper::BroadcastOnHubConnectionError(const FString& 
     OnHubConnectionError.Broadcast(InError);
 }
 
-void USignalRHubConnectionWrapper::BroadcastOnHubConnectionClosed()
+void USignalRHubConnectionWrapper::BroadcastOnHubConnectionClosed(bool InUnexpected)
 {
-    OnHubConnectionClosed.Broadcast();
+    OnHubConnectionClosed.Broadcast(InUnexpected);
 }

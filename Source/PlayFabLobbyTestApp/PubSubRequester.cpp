@@ -37,12 +37,22 @@ void FPubSubRequester::Start(const FString& InTitleId, const FString& InEntityTo
 			}
 	});
 
+	Hub_->On(TEXT("ReceiveMessage")).BindLambda([Self = TWeakPtr<FPubSubRequester>(AsShared())](const TArray<FSignalRValue>& Arguments)
+	{
+		if (const TSharedPtr<FPubSubRequester> SharedSelf = Self.Pin())
+			if(SharedSelf.IsValid())
+			{
+				UE_LOG(LogTemp, Error, TEXT("ReceiveMessage: Arguments Num: %d"), Arguments.Num());
+			}
+	});
+
 	EntityToken_ = InEntityToken;
 
 	Hub_->OnNegotiationCompleteSuccess()->BindRaw(this, &FPubSubRequester::OnSignalRNegotiateResult);
 	
 	Hub_->OnConnected().AddRaw(this, &FPubSubRequester::OnHubConnected);
 	Hub_->OnConnectionError().AddRaw(this, &FPubSubRequester::OnHubConnectionError);
+	//Hub_->OnClosed()
 	Hub_->Start();
 }
 
@@ -103,7 +113,7 @@ void FPubSubRequester::OnHubConnected(bool InReconnecting)
 						{
 							SharedSelf->ConnectionHandle_ = Params[NewConnectionHandleKey].AsString();
 							UE_LOG(LogTemp, Log, TEXT("StartOrRecoverSessionSuccess: %s"), *SharedSelf->ConnectionHandle_);
-							
+
 							SharedSelf->OpenSessionSuccessHandle_.Broadcast(SharedSelf->ConnectionHandle_, InReconnecting);
 						}
 						else
@@ -134,6 +144,12 @@ void FPubSubRequester::OnHubConnectionError(const FString& InError)
 	//Num=147 "{"code":401,"status":"Unauthorized","error":"NotAuthenticated","errorCode":1074,"errorMessage":"This API method does not allow anonymous callers."}"
 	UE_LOG(PubSubRequester, Error, TEXT("OnHubConnectionError: %s"), *InError);
 	OpenSessionErrorHandle_.Broadcast(InError);
+}
+
+void FPubSubRequester::OnHubClosed(bool InUnexpected)
+{
+	UE_LOG(PubSubRequester, Error, TEXT("OnHubClosed: %d"), InUnexpected);
+	CloseSessionHandle_.Broadcast(InUnexpected);
 }
 
 void FPubSubRequester::Stop()
