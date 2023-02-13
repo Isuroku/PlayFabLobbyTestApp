@@ -5,7 +5,23 @@
 
 #include "TestPlayfabPlayerController.h"
 
- ATestPlayfabPlayerController* UTestMenuWidget::GetCurrentPlayerController() const
- {
- 	return Cast<ATestPlayfabPlayerController>(GetOwningPlayer());
- }
+UTestMenuWidget* UTestMenuWidget::MenuWidgetSingleton_;
+
+void UTestMenuWidget::NativeConstruct()
+{
+	MenuWidgetSingleton_ = this;
+	
+	Super::NativeConstruct();
+}
+
+void UTestMenuWidget::NativeDestruct()
+{
+	MenuWidgetSingleton_ = nullptr;
+	
+	Super::NativeDestruct();
+}
+
+ATestPlayfabPlayerController* UTestMenuWidget::GetCurrentPlayerController() const
+{
+	return Cast<ATestPlayfabPlayerController>(GetOwningPlayer());
+}

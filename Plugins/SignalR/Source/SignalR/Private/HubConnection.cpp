@@ -215,6 +215,7 @@ void FHubConnection::ProcessMessage(const FString& InMessageStr)
             check(InvocationMessage != nullptr);
 
             const FString& MethodName = InvocationMessage->Target;
+            UE_LOG(LogSignalR, Log, TEXT("Received Invocation message. Method: %s"), *MethodName);
             if(InvocationHandlers.Contains(MethodName))
             {
                 InvocationHandlers[MethodName].ExecuteIfBound(InvocationMessage->Arguments);
@@ -225,7 +226,7 @@ void FHubConnection::ProcessMessage(const FString& InMessageStr)
             UE_LOG(LogSignalR, Warning, TEXT("Received unexpected message type 'StreamInvocation'"));
             break;
         case ESignalRMessageType::StreamItem:
-            // TODO
+            UE_LOG(LogSignalR, Warning, TEXT("Received unexpected message type 'StreamItem'"));
             break;
         case ESignalRMessageType::Completion:
         {
@@ -239,6 +240,7 @@ void FHubConnection::ProcessMessage(const FString& InMessageStr)
             else
             {
                 FName InvocationId = FName(*CompletionMessage->InvocationId);
+                UE_LOG(LogSignalR, Warning, TEXT("Completion: %s"), *InvocationId.ToString());
                 if (!CallbackManager.InvokeCallback(InvocationId, CompletionMessage->Result, true))
                 {
                     UE_LOG(LogSignalR, Warning, TEXT("No callback found for id: %s"), *InvocationId.ToString());
@@ -254,6 +256,7 @@ void FHubConnection::ProcessMessage(const FString& InMessageStr)
             break;
         case ESignalRMessageType::Close:
         {
+            UE_LOG(LogSignalR, Warning, TEXT("Close"));
             TSharedPtr<FCloseMessage> CloseMessage = StaticCastSharedPtr<FCloseMessage>(Message);
             check(CloseMessage != nullptr);
 
@@ -347,6 +350,7 @@ void FHubConnection::InvokeHubMethod(const FString& MethodName, const TArray<FSi
     const FInvocationMessage Invocation(CallbackIdStr, MethodName, InArguments);
 
     const auto Message = HubProtocol->SerializeMessage(&Invocation);
+    UE_LOG(LogSignalR, Log, TEXT("InvokeHubMethod: %s"), *Message);
 
     if (bHandshakeReceived)
     {

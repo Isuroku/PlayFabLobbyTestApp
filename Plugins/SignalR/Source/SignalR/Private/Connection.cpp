@@ -71,7 +71,6 @@ void FConnection::Send(const FString& Data)
 {
     if (Connection.IsValid())
     {
-        UE_LOG(LogSignalR, Log, TEXT("Send: %s"), *Data);
         Connection->Send(Data);
     }
     else
@@ -267,7 +266,6 @@ void FConnection::StartWebSocket(const FString& InWebSocketHost)
         });
         Connection->OnMessage().AddLambda([Self = TWeakPtr<FConnection>(AsShared())](const FString& MessageString)
         {
-            UE_LOG(LogSignalR, Log, TEXT("Connection->OnMessage: %s"), *MessageString);
             if (TSharedPtr<FConnection> SharedSelf = Self.Pin())
             {
                 SharedSelf->OnMessageEvent.Broadcast(MessageString);

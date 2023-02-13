@@ -1,3 +1,8 @@
+Login
+https://learn.microsoft.com/en-us/gaming/playfab/features/authentication/login/login-basics-best-practices#pure-playfab-options
+https://learn.microsoft.com/en-us/rest/api/playfab/client/authentication/login-with-playfab?view=playfab-rest
+https://learn.microsoft.com/en-us/rest/api/playfab/client/authentication/register-playfab-user?view=playfab-rest
+
 Lobby API overview
 https://github.com/MicrosoftDocs/playfab-docs/blob/docs/playfab-docs/features/multiplayer/lobby/lobby-rest-apis-overview.md
 
@@ -26,6 +31,9 @@ https://learn.microsoft.com/en-us/rest/api/playfab/multiplayer/lobby/subscribe-t
 
 SignalR
 https://learn.microsoft.com/en-us/gaming/playfab/features/real-time-notifications/signalr-hub
+
+Что такое SignalR?
+https://learn.microsoft.com/ru-ru/aspnet/core/signalr/introduction?WT.mc_id=dotnet-35129-website&view=aspnetcore-7.0
 
 How do I connect a SignalR client to PlayFab to get realtime lobby changes?
 https://community.playfab.com/questions/65975/how-do-i-connect-a-signalr-client-to-playfab-to-ge.html

@@ -15,7 +15,10 @@ class PLAYFABLOBBYTESTAPP_API UTestMenuWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 
-	void SetGameInstance(class ULocalTestInstance* InGameInstance);
+	static UTestMenuWidget* GetMenuWidgetSingleton() { return MenuWidgetSingleton_;};
+
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void AddLog(const FText& InText);
@@ -30,5 +33,5 @@ public:
 	void SetFoundLobbyIds(const TArray<FString>& InLobbyNames);
 
 private:
-
+	static UTestMenuWidget* MenuWidgetSingleton_;
 };

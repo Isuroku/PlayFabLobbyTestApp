@@ -52,7 +52,7 @@ void FPubSubRequester::Start(const FString& InTitleId, const FString& InEntityTo
 	
 	Hub_->OnConnected().AddRaw(this, &FPubSubRequester::OnHubConnected);
 	Hub_->OnConnectionError().AddRaw(this, &FPubSubRequester::OnHubConnectionError);
-	//Hub_->OnClosed()
+	Hub_->OnClosed().AddRaw(this, &FPubSubRequester::OnHubClosed);
 	Hub_->Start();
 }
 
@@ -70,7 +70,7 @@ void FPubSubRequester::OnSignalRNegotiateResult(TSharedPtr<FJsonObject> InJsonOb
 	const FString RedirectUrl = InJsonObject->Values[UrlStr]->AsString();
 	const FString AccessToken = InJsonObject->Values[AccessTokenStr]->AsString();
 
-	UE_LOG(PubSubRequester, Log, TEXT("RedirectUrl: %s; AccessToken: %s"), *RedirectUrl, *AccessToken);
+	UE_LOG(PubSubRequester, Log, TEXT("RedirectUrl: %s"), *RedirectUrl);
 	//https://pubsub-signalr-prod-westus3-001.service.signalr.net/client/?hub=pubsubhub;
 
 	Hub_->ClearWebSocketHeader();

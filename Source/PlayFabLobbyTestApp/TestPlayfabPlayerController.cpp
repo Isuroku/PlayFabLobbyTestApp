@@ -2,6 +2,12 @@
 
 
 #include "TestPlayfabPlayerController.h"
+
+#include "CommonConstants.h"
+#include "LobbyClient.h"
+#include "LobbyKeeper.h"
+#include "LogUtility.h"
+#include "LogUtility.h"
 #include "TestMenuWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayFabUtilities.h"
@@ -9,10 +15,6 @@
 #include "Algo/Transform.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TestPlayfab, Log, All);
-
-FString ATestPlayfabPlayerController::PlayfabTitlePlayerIDFieldName = TEXT("title_player_account");
-FString ATestPlayfabPlayerController::PlayfabPlayerIDFieldName = TEXT("master_player_account ");
-FString ATestPlayfabPlayerController::QueueName = TEXT("Test");
 
 void ATestPlayfabPlayerController::BeginPlay()
 {
@@ -32,6 +34,9 @@ void ATestPlayfabPlayerController::BeginPlay()
 
 void ATestPlayfabPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if(GetWorld() != nullptr)
+		GetWorld()->GetTimerManager().ClearTimer(LoginExpiredTimerHandle_);
+	
 	if(HasMMTicket())
 		StopMM();
 
@@ -45,6 +50,13 @@ void ATestPlayfabPlayerController::WriteLog(const FString& inText) const
 {
 	MenuWidget_->AddLog(FText::FromString(inText));
 	UE_LOG(TestPlayfab, Log, TEXT("%s"), *inText);
+}
+
+UWorld* ATestPlayfabPlayerController::GetWorld() const
+{
+	if(GetOuter() == nullptr)
+		return nullptr;
+	return GetOuter()->GetWorld();
 }
 
 void ATestPlayfabPlayerController::LoginAsPlayer(const FString& InName)
@@ -77,15 +89,19 @@ void ATestPlayfabPlayerController::OnSuccessLogin(const PlayFab::ClientModels::F
 	EntityToken_ = inResult.EntityToken->EntityToken;
 	EntityTokenExpiration_ = inResult.EntityToken->TokenExpiration;
 	PlayfabTitlePlayerID_ = inResult.EntityToken->Entity->Id;
+
+	const FTimespan Timespan = EntityTokenExpiration_ - FDateTime::UtcNow();
+	const float CheckSeconds = Timespan.GetTotalSeconds() - 60;
+	GetWorld()->GetTimerManager().SetTimer(LoginExpiredTimerHandle_, this, &ATestPlayfabPlayerController::Login, CheckSeconds, false);
 	
-	WriteLog(ToString());
+	LOG_MSG(TestPlayfab, *ToString());
 }
 
 void ATestPlayfabPlayerController::LoginError(const PlayFab::FPlayFabCppError& inError)
 {
-	WriteLog(FString::Printf(TEXT("error %s"), *inError.GenerateErrorReport()));
+	LOG_VERB(TestPlayfab, Error, TEXT("error %s"), *inError.GenerateErrorReport());
 }
-
+#pragma region MM
 void ATestPlayfabPlayerController::StartMM()
 {
 	if(!IsLogged())
@@ -95,7 +111,7 @@ void ATestPlayfabPlayerController::StartMM()
 	}
 	PlayFab::MultiplayerModels::FEntityKey CreatorEntityKey;
 	CreatorEntityKey.Id = PlayfabTitlePlayerID_;
-	CreatorEntityKey.Type = PlayfabTitlePlayerIDFieldName;
+	CreatorEntityKey.Type = CommonConstants::PlayfabTitlePlayerIDFieldName;
 	
 	PlayFab::MultiplayerModels::FMatchmakingPlayer Creator;
 	Creator.Entity = CreatorEntityKey;
@@ -109,7 +125,7 @@ void ATestPlayfabPlayerController::StartMM()
 	
 	PlayFab::MultiplayerModels::FCreateMatchmakingTicketRequest Request;
 	Request.Creator = Creator;
-	Request.QueueName = QueueName;
+	Request.QueueName = CommonConstants::TestQueueName;
 	Request.GiveUpAfterSeconds = 120;
 	Request.MembersToMatchWith = TArray<PlayFab::MultiplayerModels::FEntityKey>();
 	
@@ -128,7 +144,7 @@ void ATestPlayfabPlayerController::StartMM()
 void ATestPlayfabPlayerController::StopMM()
 {
 	PlayFab::MultiplayerModels::FCancelMatchmakingTicketRequest Request;
-	Request.QueueName = QueueName;
+	Request.QueueName = CommonConstants::TestQueueName;
 	Request.TicketId = MMTicket_;
 	
 	const bool RequestResult = PlayFab::UPlayFabMultiplayerAPI().CancelMatchmakingTicket(Request);
@@ -144,7 +160,7 @@ void ATestPlayfabPlayerController::CreatedMatchmakingTicket(const PlayFab::Multi
 	MMTicket_ = Result.TicketId;
 	WriteLog(FString::Printf(TEXT("CreatedMatchmakingTicket for %s; MMTicket_: %s"), *PlayerName_, *MMTicket_));
 
-	GetOuter()->GetWorld()->GetTimerManager().SetTimer(MMTicketStatusHandle_, this, &ATestPlayfabPlayerController::CheckMatchmakingTicketStatus, 8, true);
+	GetWorld()->GetTimerManager().SetTimer(MMTicketStatusHandle_, this, &ATestPlayfabPlayerController::CheckMatchmakingTicketStatus, 8, true);
 }
 
 void ATestPlayfabPlayerController::CreateMatchmakingTicketError(const PlayFab::FPlayFabCppError& inError)
@@ -157,7 +173,7 @@ void ATestPlayfabPlayerController::CheckMatchmakingTicketStatus()
 	WriteLog(FString::Printf(TEXT("CheckMatchmakingTicketStatus for %s"), *PlayerName_));
 	
 	PlayFab::MultiplayerModels::FGetMatchmakingTicketRequest Request;
-	Request.QueueName = QueueName;
+	Request.QueueName = CommonConstants::TestQueueName;
 	Request.TicketId = MMTicket_;
 
 	PlayFab::UPlayFabMultiplayerAPI::FGetMatchmakingTicketDelegate OnSuccess;
@@ -178,7 +194,7 @@ void ATestPlayfabPlayerController::CheckedMatchmakingTicketStatus(const PlayFab:
 		
 		PlayFab::MultiplayerModels::FGetMatchRequest Request;
 		Request.MatchId = Result.MatchId;
-		Request.QueueName = QueueName;
+		Request.QueueName = CommonConstants::TestQueueName;
 
 		PlayFab::UPlayFabMultiplayerAPI::FGetMatchDelegate OnSuccess;
 		OnSuccess.BindUObject(this, &ATestPlayfabPlayerController::GotMatch);
@@ -231,6 +247,7 @@ void ATestPlayfabPlayerController::GetMatchError(const PlayFab::FPlayFabCppError
 {
 	WriteLog(FString::Printf(TEXT("GetMatchError for %s: %s"), *PlayerName_, *inError.GenerateErrorReport()));
 }
+#pragma endregion MM
 
 void ATestPlayfabPlayerController::StartCreateLobby(const TArray<FString>& InSearchParams)
 {
@@ -256,13 +273,13 @@ void ATestPlayfabPlayerController::SignalRLogin()
 
 void ATestPlayfabPlayerController::OnSignalRSessionOpenError(const FString& InError)
 {
-	WriteLog( FString::Printf(TEXT("OnSignalRSessionOpenError: %s"), *InError));
+	LOG_VERB(TestPlayfab, Error, TEXT("InError %s"), *InError);
 }
 
 void ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess(const FString& InConnectionHandle, bool InReconnecting)
 {
-	WriteLog( FString::Printf(TEXT("OnSignalRSessionOpenSuccess, ConnectionHandle: %s; InReconnecting: %d"), *InConnectionHandle, InReconnecting));
-
+	LOG_VERB(TestPlayfab, Error, TEXT("InConnectionHandle %s; InReconnecting: %d"), *InConnectionHandle, InReconnecting);
+	
 	if(!InReconnecting)
 		CreateLobby();
 }
@@ -270,15 +287,17 @@ void ATestPlayfabPlayerController::OnSignalRSessionOpenSuccess(const FString& In
 void ATestPlayfabPlayerController::OnSignalRSessionClosed(bool InUnexpected)
 {
 	WriteLog( FString::Printf(TEXT("OnSignalRSessionClosed, InUnexpected: %d"), InUnexpected));
+	if(InUnexpected && !LobbyId_.IsEmpty())
+		GetLobby(LobbyId_);
 }
 
 void ATestPlayfabPlayerController::CreateLobby()
 {
-	WriteLog(FString(TEXT("CreateLobby.")));
+	LOG_FUNC_LABEL(TestPlayfab);
 	
 	PlayFab::MultiplayerModels::FEntityKey CreatorEntityKey;
 	CreatorEntityKey.Id = PlayfabTitlePlayerID_;
-	CreatorEntityKey.Type = PlayfabTitlePlayerIDFieldName;
+	CreatorEntityKey.Type = CommonConstants::PlayfabTitlePlayerIDFieldName;
 	
 	PlayFab::MultiplayerModels::FCreateLobbyRequest Request;
 
@@ -347,7 +366,8 @@ void ATestPlayfabPlayerController::CreateLobby()
 	//	"UseConnections":true
 	//}
 #pragma endregion example	
-	WriteLog(FString::Printf(TEXT("CreateLobby for %s; RequestResult: %d; RequestString: %s"), *PlayerName_, RequestResult, *RequestString));
+
+	LOG_MSGF(TestPlayfab, TEXT("CreateLobby for %s; RequestResult: %d; RequestString: %s"), *PlayerName_, RequestResult, *RequestString);
 }
 
 void ATestPlayfabPlayerController::OnCreateLobby(const PlayFab::MultiplayerModels::FCreateLobbyResult& InResult)
@@ -359,11 +379,16 @@ void ATestPlayfabPlayerController::OnCreateLobby(const PlayFab::MultiplayerModel
 	LobbyId_ = InResult.LobbyId;
 	LobbyConnectionString_ = InResult.ConnectionString;
 
-	MenuWidget_->SetLobbyId(LobbyId_);
+	OnLobbyCreatedOrJoin(LobbyId_, LobbyConnectionString_);
 	
 	WriteLog(FString::Printf(TEXT("OnCreateLobby for %s: %s"), *PlayerName_, *InResult.toJSONString()));
 
 	SubscribeToLobbyChange();
+}
+
+void ATestPlayfabPlayerController::OnLobbyCreatedOrJoin(const FString& InLobbyId, const FString& InConnectionString)
+{
+	MenuWidget_->SetLobbyId(InLobbyId);
 }
 
 void ATestPlayfabPlayerController::SubscribeToLobbyChange()
@@ -374,7 +399,7 @@ void ATestPlayfabPlayerController::SubscribeToLobbyChange()
 
 	Request.Type = PlayFab::MultiplayerModels::SubscriptionTypeLobbyChange;
 	Request.pfEntityKey.Id = PlayfabTitlePlayerID_;
-	Request.pfEntityKey.Type = PlayfabTitlePlayerIDFieldName;
+	Request.pfEntityKey.Type = CommonConstants::PlayfabTitlePlayerIDFieldName;
 	Request.ResourceId = LobbyId_;
 	Request.SubscriptionVersion = 1;
 
@@ -578,7 +603,7 @@ void ATestPlayfabPlayerController::JoinLobby(const FString& InLobbyId)
 
 	Request.MemberEntity = MakeShareable(new PlayFab::MultiplayerModels::FEntityKey());
 	Request.MemberEntity->Id = PlayfabTitlePlayerID_;
-	Request.MemberEntity->Type = PlayfabTitlePlayerIDFieldName;
+	Request.MemberEntity->Type = CommonConstants::PlayfabTitlePlayerIDFieldName;
 
 	PlayFab::UPlayFabMultiplayerAPI::FJoinLobbyDelegate OnSuccess;
 	OnSuccess.BindUObject(this, &ATestPlayfabPlayerController::OnJoinLobby);
@@ -595,7 +620,8 @@ void ATestPlayfabPlayerController::JoinLobby(const FString& InLobbyId)
 void ATestPlayfabPlayerController::OnJoinLobby(const PlayFab::MultiplayerModels::FJoinLobbyResult& InResult)
 {
 	LobbyId_ = InResult.LobbyId;
-	MenuWidget_->SetLobbyId(LobbyId_);
+
+	OnLobbyCreatedOrJoin(LobbyId_, LobbyConnectionString_);
 	
 	WriteLog(FString::Printf(TEXT("OnJoinLobby for %s: %s"), *PlayerName_, *InResult.toJSONString()));
 }
@@ -643,7 +669,7 @@ void ATestPlayfabPlayerController::LeaveLobby()
 
 	Request.MemberEntity = MakeShareable(new PlayFab::MultiplayerModels::FEntityKey());
 	Request.MemberEntity->Id = PlayfabTitlePlayerID_;
-	Request.MemberEntity->Type = PlayfabTitlePlayerIDFieldName;
+	Request.MemberEntity->Type = CommonConstants::PlayfabTitlePlayerIDFieldName;
 
 	PlayFab::UPlayFabMultiplayerAPI::FLeaveLobbyDelegate OnSuccess;
 	OnSuccess.BindUObject(this, &ATestPlayfabPlayerController::OnLeaveLobby);
@@ -669,4 +695,70 @@ void ATestPlayfabPlayerController::OnLeaveLobby(const PlayFab::MultiplayerModels
 void ATestPlayfabPlayerController::OnLeaveLobbyError(const PlayFab::FPlayFabCppError& InError)
 {
 	WriteLog(FString::Printf(TEXT("OnJoinLobbyError for %s: %s"), *PlayerName_, *InError.GenerateErrorReport()));
+}
+
+
+void ATestPlayfabPlayerController::CreateLobbyKeeper()
+{
+	LOG_FUNC_LABEL(TestPlayfab);
+	ENSURE_RET(!PlayfabTitlePlayerID_.IsEmpty(), TestPlayfab);
+	ENSURE_RET(!IsValid(LobbyClient_), TestPlayfab);
+	
+	LobbyKeeper_ = NewObject<ULobbyKeeper>(this);
+	
+	LobbyKeeper_->OnLobbyCreatedEvent().AddUObject(this, &ATestPlayfabPlayerController::OnLobbyCreatedOrJoin);
+
+	FSearchData SearchData;
+	SearchData.BuildNumber = TEXT("92535");
+	SearchData.Level = TEXT("World_Map_01_Persistent_Level");
+	SearchData.GameVersion = TEXT("36.9.6");
+	SearchData.ServerRegion = TEXT("eu-central");
+	SearchData.ServerNeedsConfiguring = TEXT("eu-central");
+	
+	FServerLobbyData ServerLobbyData;
+	ServerLobbyData.IpAddress = TEXT("127.0.0.1");
+	ServerLobbyData.Port = TEXT("7777");
+	
+	LobbyKeeper_->Start(this, SearchData, ServerLobbyData);
+}
+
+void ATestPlayfabPlayerController::DeleteLobbyKeeper()
+{
+	LOG_FUNC_LABEL(TestPlayfab);
+
+	if(IsValid(LobbyKeeper_))
+		LobbyKeeper_->ConditionalBeginDestroy();
+	LobbyKeeper_ = nullptr;
+}
+
+void ATestPlayfabPlayerController::CreateLobbyClient()
+{
+	LOG_FUNC_LABEL(TestPlayfab);
+	ENSURE_RET(!PlayfabTitlePlayerID_.IsEmpty(), TestPlayfab);
+	ENSURE_RET(!IsValid(LobbyKeeper_), TestPlayfab);
+	LobbyClient_ = NewObject<ULobbyClient>(this);
+	
+	LobbyClient_->OnFindLobbiesEvent().AddUObject(this, &ATestPlayfabPlayerController::OnFindLobbies);
+	LobbyClient_->OnLobbyJoinEvent().AddUObject(this, &ATestPlayfabPlayerController::OnLobbyCreatedOrJoin);
+
+	FSearchData SearchData;
+	SearchData.BuildNumber = TEXT("92535");
+	SearchData.Level = TEXT("World_Map_01_Persistent_Level");
+	SearchData.GameVersion = TEXT("36.9.6");
+	SearchData.ServerRegion = TEXT("eu-central");
+	SearchData.ServerNeedsConfiguring = TEXT("eu-central");
+	
+	LobbyClient_->Start(this, SearchData);
+}
+
+void ATestPlayfabPlayerController::DeleteLobbyClient()
+{
+	LOG_FUNC_LABEL(TestPlayfab);
+
+	if(IsValid(LobbyClient_))
+	{
+		LobbyClient_->OnFindLobbiesEvent().Clear();
+		LobbyClient_->ConditionalBeginDestroy();
+	}
+	LobbyClient_ = nullptr;
 }

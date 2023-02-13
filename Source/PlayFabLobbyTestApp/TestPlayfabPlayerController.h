@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "IPlayfabDataProvider.h"
 #include "GameFramework/PlayerController.h"
 #include "TestMenuWidget.h"
 #include "PubSubRequester.h"
@@ -14,7 +15,7 @@
  * 
  */
 UCLASS()
-class PLAYFABLOBBYTESTAPP_API ATestPlayfabPlayerController : public APlayerController
+class PLAYFABLOBBYTESTAPP_API ATestPlayfabPlayerController : public APlayerController, public IPlayfabDataProvider
 {
 	GENERATED_BODY()
 	
@@ -22,14 +23,18 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UTestMenuWidget> MenuWidgetClass;
 
-	const TCHAR* GetTitleId() const { return TitleID_; }
+	virtual const TCHAR* GetTitleId() const override { return TitleID_; }
+	virtual const FString& GetTitlePlayerID() const override { return PlayfabTitlePlayerID_; }
+	virtual const FString& GetEntityToken() const override { return EntityToken_; }
 	const TCHAR* GetDefaultSecretKey() const { return DefaultSecretKey_; }
+
+	virtual UWorld* GetWorld() const override;
 
 	UFUNCTION(BlueprintCallable)
 	void LoginAsPlayer(const FString& InName);
 
-	FString ToString() const { return FString::Printf(TEXT("PlayerName: %s; PlayfabID: %s; PlayfabTitlePlayerID_: %s"),
-		*PlayerName_, *PlayfabID_, *PlayfabTitlePlayerID_); }
+	FString ToString() const { return FString::Printf(TEXT("PlayerName: %s; PlayfabID: %s; PlayfabTitlePlayerID_: %s, EntityTokenExpiration_: %s; EntityToken_: %s"),
+		*PlayerName_, *PlayfabID_, *PlayfabTitlePlayerID_, *EntityTokenExpiration_.ToIso8601(), *EntityToken_); }
 
 	bool IsLogged() const { return !PlayfabTitlePlayerID_.IsEmpty(); }
 
@@ -56,6 +61,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LeaveLobby();
 
+	UFUNCTION(BlueprintCallable)
+	void CreateLobbyKeeper();
+
+	UFUNCTION(BlueprintCallable)
+	void DeleteLobbyKeeper();
+
+	UFUNCTION(BlueprintCallable)
+	void CreateLobbyClient();
+
+	UFUNCTION(BlueprintCallable)
+	void DeleteLobbyClient();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -79,11 +96,10 @@ protected:
 	void OnGetLobby(const PlayFab::MultiplayerModels::FGetLobbyResult& InResult);
 	void OnGetLobbyError(const PlayFab::FPlayFabCppError& InError);
 
-	void SignalRLogin();
-	
 	void CreateLobby();
 	void OnCreateLobby(const PlayFab::MultiplayerModels::FCreateLobbyResult& InResult);
 	void OnCreateLobbyError(const PlayFab::FPlayFabCppError& InError);
+	void OnLobbyCreatedOrJoin(const FString& InLobbyId, const FString& InConnectionString);
 
 	void OnFindLobbies(const PlayFab::MultiplayerModels::FFindLobbiesResult& InResult);
 	void OnFindLobbiesError(const PlayFab::FPlayFabCppError& InError);
@@ -92,6 +108,7 @@ protected:
 	void OnSubscribeToLobby(const PlayFab::MultiplayerModels::FSubscribeToLobbyResourceResult& InResult);
 	void OnSubscribeToLobbyError(const PlayFab::FPlayFabCppError& InError);
 
+	void SignalRLogin();
 	void OnSignalRSessionOpenError(const FString& InError);
 	void OnSignalRSessionOpenSuccess(const FString& InConnectionHandle, bool InReconnecting);
 	void OnSignalRSessionClosed(bool InUnexpected);
@@ -102,10 +119,6 @@ protected:
 	void OnLeaveLobby(const PlayFab::MultiplayerModels::FLobbyEmptyResult& InResult);
 	void OnLeaveLobbyError(const PlayFab::FPlayFabCppError& InError);
 	
-	static FString PlayfabTitlePlayerIDFieldName;
-	static FString PlayfabPlayerIDFieldName;
-	static FString QueueName;
-
 	const TCHAR* TitleID_ = TEXT("A2545");
 	const TCHAR* DefaultSecretKey_ = TEXT("");
 
@@ -120,6 +133,7 @@ protected:
 	FString MMTicket_;
 
 	FTimerHandle MMTicketStatusHandle_;
+	FTimerHandle LoginExpiredTimerHandle_;
 	
 	FTimerHandle LobbiesStatusHandle_;
 
@@ -131,4 +145,10 @@ protected:
 	TSharedPtr<FPubSubRequester> PubSubRequester_;
 
 	TArray<PlayFab::MultiplayerModels::FLobbySummary> FoundLobbies_;
+
+	UPROPERTY()
+	class ULobbyKeeper* LobbyKeeper_;
+
+	UPROPERTY()
+	class ULobbyClient* LobbyClient_;
 };
