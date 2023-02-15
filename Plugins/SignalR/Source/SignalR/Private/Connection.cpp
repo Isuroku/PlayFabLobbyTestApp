@@ -122,7 +122,7 @@ void FConnection::Negotiate(bool InReconnecting)
     HttpRequest->SetURL(Host + TEXT("/negotiate?negotiateVersion=1"));
     if(NegotiateHeaders.Num() > 0)
     {
-        for (const auto KeyValue : NegotiateHeaders)
+        for (const auto& KeyValue : NegotiateHeaders)
         {
             HttpRequest->SetHeader(KeyValue.Key, KeyValue.Value);
         }
