@@ -7,7 +7,6 @@
 #include "LobbyClient.h"
 #include "LobbyKeeper.h"
 #include "LogUtility.h"
-#include "LogUtility.h"
 #include "TestMenuWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayFabUtilities.h"
@@ -708,16 +707,17 @@ void ATestPlayfabPlayerController::CreateLobbyKeeper()
 	
 	LobbyKeeper_->OnLobbyCreatedEvent().AddUObject(this, &ATestPlayfabPlayerController::OnLobbyCreatedOrJoin);
 
-	FSearchData SearchData;
-	SearchData.BuildNumber = TEXT("92535");
-	SearchData.Level = TEXT("World_Map_01_Persistent_Level");
-	SearchData.GameVersion = TEXT("36.9.6");
-	SearchData.ServerRegion = TEXT("eu-central");
-	SearchData.ServerNeedsConfiguring = TEXT("eu-central");
+	FLobbyParameters SearchData;
+	SearchData[ESPNames::ServerLobbyLabel] = TEXT("1");
+	SearchData[ESPNames::BuildNumber] = TEXT("92535");
+	SearchData[ESPNames::Level] = TEXT("World_Map_01_Persistent_Level");
+	SearchData[ESPNames::GameVersion] = TEXT("36.9.6");
+	SearchData[ESPNames::ServerRegion] = TEXT("eu-central");
+	SearchData[ESPNames::ServerNeedsConfiguring] = TEXT("eu-central");
 	
-	FServerLobbyData ServerLobbyData;
-	ServerLobbyData.IpAddress = TEXT("127.0.0.1");
-	ServerLobbyData.Port = TEXT("7777");
+	FLobbyParameters ServerLobbyData;
+	ServerLobbyData[ESPNames::IpAddress] = TEXT("127.0.0.1");
+	ServerLobbyData[ESPNames::Port] = TEXT("7777");
 	
 	LobbyKeeper_->Start(this, SearchData, ServerLobbyData);
 }
@@ -741,12 +741,13 @@ void ATestPlayfabPlayerController::CreateLobbyClient()
 	LobbyClient_->OnFindLobbiesEvent().AddUObject(this, &ATestPlayfabPlayerController::OnFindLobbies);
 	LobbyClient_->OnLobbyJoinEvent().AddUObject(this, &ATestPlayfabPlayerController::OnLobbyCreatedOrJoin);
 
-	FSearchData SearchData;
-	SearchData.BuildNumber = TEXT("92535");
-	SearchData.Level = TEXT("World_Map_01_Persistent_Level");
-	SearchData.GameVersion = TEXT("36.9.6");
-	SearchData.ServerRegion = TEXT("eu-central");
-	SearchData.ServerNeedsConfiguring = TEXT("eu-central");
+	FLobbyParameters SearchData;
+	SearchData[ESPNames::ServerLobbyLabel] = TEXT("1");
+	SearchData[ESPNames::BuildNumber] = TEXT("92535");
+	SearchData[ESPNames::Level] = TEXT("World_Map_01_Persistent_Level");
+	SearchData[ESPNames::GameVersion] = TEXT("36.9.6");
+	SearchData[ESPNames::ServerRegion] = TEXT("eu-central");
+	SearchData[ESPNames::ServerNeedsConfiguring] = TEXT("eu-central");
 	
 	LobbyClient_->Start(this, SearchData);
 }

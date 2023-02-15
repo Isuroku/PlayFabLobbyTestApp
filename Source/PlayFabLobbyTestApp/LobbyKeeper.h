@@ -20,7 +20,7 @@ class PLAYFABLOBBYTESTAPP_API ULobbyKeeper : public UPlayfabLobbyBase
 	GENERATED_BODY()
 public:
 
-	void Start(IPlayfabDataProvider* InDataProvider, const FSearchData& InSearchData, const FServerLobbyData& InServerLobbyData);
+	void Start(IPlayfabDataProvider* InDataProvider, const FLobbyParameters& InSearchData, const FLobbyParameters& InServerLobbyData);
 
 protected:
 	virtual void OnCheckLobbyHandle(const PlayFab::MultiplayerModels::FGetLobbyResult& InResult) override;

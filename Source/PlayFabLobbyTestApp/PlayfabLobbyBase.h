@@ -9,6 +9,7 @@
 #include "PlayFabClientAPI.h"
 #include "IPlayfabDataProvider.h"
 #include "CommonConstants.h"
+#include "LobbyParameters.h"
 #include "PlayfabLobbyBase.generated.h"
 
 /**
@@ -34,10 +35,10 @@ public:
 protected:
 	void Init(IPlayfabDataProvider* InDataProvider);
 
-	void CreateLobby(const FSearchData& InSearchData, const FServerLobbyData& InServerLobbyData, int32 InMaxPlayer = 2);
+	void CreateLobby(const FLobbyParameters& InSearchData, const FLobbyParameters& InServerLobbyData, int32 InMaxPlayer = 2);
 	void CreateLobby();
 
-	void FindLobby(const FSearchData& InSearchData);
+	void FindLobby(const FLobbyParameters& InSearchData);
 	virtual void FindLobby();
 	virtual void OnFindLobbies(const PlayFab::MultiplayerModels::FFindLobbiesResult& InResult);
 
@@ -78,8 +79,8 @@ private:
 
 	IPlayfabDataProvider* DataProvider_;
 
-	FSearchData SearchData_;
-	FServerLobbyData ServerLobbyData_;
+	FLobbyParameters SearchData_;
+	FLobbyParameters ServerLobbyData_;
 	int32 MaxPlayer_ = 2;
 
 	FOnLobbyCreatedEvent OnLobbyCreatedHandle_;

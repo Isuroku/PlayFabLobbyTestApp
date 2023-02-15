@@ -28,7 +28,7 @@ class PLAYFABLOBBYTESTAPP_API ULobbyClient : public UPlayfabLobbyBase
 public:
 	virtual void BeginDestroy() override;
 	
-	void Start(IPlayfabDataProvider* InDataProvider, const FSearchData& InSearchData);
+	void Start(IPlayfabDataProvider* InDataProvider, const FLobbyParameters& InSearchData);
 
 	DECLARE_EVENT(ULobbyKeeper, FOnFailFindLobbiesEvent)
 	FOnFailFindLobbiesEvent& OnFailFindLobbiesEvent() { return  OnFailFindLobbiesHandle_; }

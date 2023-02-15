@@ -26,7 +26,7 @@ void ULobbyClient::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-void ULobbyClient::Start(IPlayfabDataProvider* InDataProvider, const FSearchData& InSearchData)
+void ULobbyClient::Start(IPlayfabDataProvider* InDataProvider, const FLobbyParameters& InSearchData)
 {
 	LOG_FUNC_LABEL(LobbyClient);
 	Init(InDataProvider);

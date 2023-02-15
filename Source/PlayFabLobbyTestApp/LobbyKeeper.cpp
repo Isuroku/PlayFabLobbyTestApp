@@ -6,11 +6,10 @@
 #include "CommonConstants.h"
 #include "LogUtility.h"
 #include "PlayFabMultiplayerAPI.h"
-#include "PubSubRequester.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LobbyKeeper, Log, All);
 
-void ULobbyKeeper::Start(IPlayfabDataProvider* InDataProvider, const FSearchData& InSearchData, const FServerLobbyData& InServerLobbyData)
+void ULobbyKeeper::Start(IPlayfabDataProvider* InDataProvider, const FLobbyParameters& InSearchData, const FLobbyParameters& InServerLobbyData)
 {
 	Init(InDataProvider);
 	CreateLobby(InSearchData, InServerLobbyData, 2);

@@ -22,7 +22,7 @@ void UPlayfabLobbyBase::Init(IPlayfabDataProvider* InDataProvider)
 }
 
 #pragma region CreateLobby
-void UPlayfabLobbyBase::CreateLobby(const FSearchData& InSearchData, const FServerLobbyData& InServerLobbyData, int32 InMaxPlayer)
+void UPlayfabLobbyBase::CreateLobby(const FLobbyParameters& InSearchData, const FLobbyParameters& InServerLobbyData, int32 InMaxPlayer)
 {
 	LOG_MSGF(PlayfabLobbyBase, TEXT("InSearchData: %s; InServerLobbyData: %s"), *InSearchData.ToString(), *InServerLobbyData.ToString());
 	
@@ -47,7 +47,7 @@ void UPlayfabLobbyBase::CreateLobby()
 
 	Request.pfAccessPolicy = PlayFab::MultiplayerModels::AccessPolicy::AccessPolicyPublic;
 
-	ServerLobbyData_.SaveToMap(Request.LobbyData);
+	ServerLobbyData_.SerializeAllDataNormalName(Request.LobbyData);
 	
 	Request.MaxPlayers = MaxPlayer_;
 
@@ -59,7 +59,7 @@ void UPlayfabLobbyBase::CreateLobby()
 
 	Request.pfOwnerMigrationPolicy =  PlayFab::MultiplayerModels::OwnerMigrationPolicy::OwnerMigrationPolicyAutomatic;
 
-	SearchData_.SaveToMap(Request.SearchData);
+	SearchData_.SerializeAllDataPrefabSearchName(Request.SearchData);
 
 	Request.UseConnections = true;
 
@@ -136,7 +136,7 @@ void UPlayfabLobbyBase::OnCreateLobbyError(const PlayFab::FPlayFabCppError& InEr
 #pragma endregion CreateLobby
 
 #pragma region FindLobby
-void UPlayfabLobbyBase::FindLobby(const FSearchData& InSearchData)
+void UPlayfabLobbyBase::FindLobby(const FLobbyParameters& InSearchData)
 {
 	LOG_MSGF(PlayfabLobbyBase, TEXT("InSearchData: %s"), *InSearchData.ToString());
 	SearchData_ = InSearchData;
