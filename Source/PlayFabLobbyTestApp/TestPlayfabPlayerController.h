@@ -9,6 +9,7 @@
 #include "PubSubRequester.h"
 #include "PlayFabMultiplayerDataModels.h"
 #include "PlayFabClientAPI.h"
+#include "PlayFabServerDataModels.h"
 #include "TestPlayfabPlayerController.generated.h"
 
 /**
@@ -32,6 +33,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoginAsPlayer(const FString& InName);
+
+	UFUNCTION(BlueprintCallable)
+	void LoginAsServer(const FString& InName);
 
 	FString ToString() const { return FString::Printf(TEXT("PlayerName: %s; PlayfabID: %s; PlayfabTitlePlayerID_: %s, EntityTokenExpiration_: %s; EntityToken_: %s"),
 		*PlayerName_, *PlayfabID_, *PlayfabTitlePlayerID_, *EntityTokenExpiration_.ToIso8601(), *EntityToken_); }
@@ -78,9 +82,12 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void WriteLog(const FString& inText) const;
+
+	void ServerLogin();
+	void OnSuccessServerLogin(const PlayFab::ServerModels::FServerLoginResult& inResult);
+	void OnServerLoginError(const PlayFab::FPlayFabCppError& inError);
 	
 	void Login();
-	
 	void OnSuccessLogin(const PlayFab::ClientModels::FLoginResult& inResult);
 	void LoginError(const PlayFab::FPlayFabCppError& inError);
 
@@ -120,7 +127,7 @@ protected:
 	void OnLeaveLobbyError(const PlayFab::FPlayFabCppError& InError);
 	
 	const TCHAR* TitleID_ = TEXT("A2545");
-	const TCHAR* DefaultSecretKey_ = TEXT("");
+	const TCHAR* DefaultSecretKey_ = TEXT("73E68RPHN5MDM3TPXFJ17YKWM5A9XRJBP8JZBOSRC93973ENOT");
 
 	class UTestMenuWidget* MenuWidget_;
 

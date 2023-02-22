@@ -10,6 +10,7 @@
 #include "IPlayfabDataProvider.h"
 #include "CommonConstants.h"
 #include "LobbyParameters.h"
+#include "PlayFabServerDataModels.h"
 #include "PlayfabLobbyBase.generated.h"
 
 /**
@@ -35,6 +36,8 @@ public:
 protected:
 	void Init(IPlayfabDataProvider* InDataProvider);
 
+	void RegisterGame();
+
 	void CreateLobby(const FLobbyParameters& InSearchData, const FLobbyParameters& InServerLobbyData, int32 InMaxPlayer = 2);
 	void CreateLobby();
 
@@ -58,6 +61,9 @@ protected:
 	bool OpenToFind_ = true;
 	
 private:
+	void OnRegisterGame(const PlayFab::ServerModels::FRegisterGameResponse& InResult);
+	void OnRegisterGameError(const PlayFab::FPlayFabCppError& InError);
+	
 	void OnCreateLobby(const PlayFab::MultiplayerModels::FCreateLobbyResult& InResult);
 	void OnCreateLobbyError(const PlayFab::FPlayFabCppError& InError);	
 	

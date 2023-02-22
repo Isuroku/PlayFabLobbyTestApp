@@ -11,6 +11,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayFabUtilities.h"
 #include "PlayFabMultiplayerAPI.h"
+#include "PlayFabServerAPI.h"
 #include "Algo/Transform.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TestPlayfab, Log, All);
@@ -58,11 +59,56 @@ UWorld* ATestPlayfabPlayerController::GetWorld() const
 	return GetOuter()->GetWorld();
 }
 
+void ATestPlayfabPlayerController::LoginAsServer(const FString& InName)
+{
+	PlayerName_ = InName;
+
+	//UPlayFabUtilities::setPlayFabSettings(GetTitleId(), GetDefaultSecretKey());
+	UPlayFabUtilities::setPlayFabSettings(GetTitleId(), TEXT(""));
+	
+	ServerLogin();
+}
+
+void ATestPlayfabPlayerController::ServerLogin()
+{
+	PlayFab::ServerModels::FLoginWithServerCustomIdRequest Request;
+
+	Request.CreateAccount = true;
+	Request.ServerCustomId = PlayerName_;
+
+	PlayFab::UPlayFabServerAPI::FLoginWithServerCustomIdDelegate OnSuccess;
+	OnSuccess.BindUObject(this, &ATestPlayfabPlayerController::OnSuccessServerLogin);
+	PlayFab::FPlayFabErrorDelegate OnError;
+	OnError.BindUObject(this, &ATestPlayfabPlayerController::LoginError);
+	
+	PlayFab::UPlayFabServerAPI().LoginWithServerCustomId(Request, OnSuccess, OnError);
+}
+
+void ATestPlayfabPlayerController::OnSuccessServerLogin(const PlayFab::ServerModels::FServerLoginResult& inResult)
+{
+	PlayfabID_ = inResult.PlayFabId;
+	SessionTicket_ = inResult.SessionTicket;
+	EntityToken_ = inResult.EntityToken->EntityToken; //L"title_player_account"
+	EntityTokenExpiration_ = inResult.EntityToken->TokenExpiration;
+	PlayfabTitlePlayerID_ = inResult.EntityToken->Entity->Id;
+
+	const FTimespan Timespan = EntityTokenExpiration_ - FDateTime::UtcNow();
+	const float CheckSeconds = Timespan.GetTotalSeconds() - 60;
+	GetWorld()->GetTimerManager().SetTimer(LoginExpiredTimerHandle_, this, &ATestPlayfabPlayerController::Login, CheckSeconds, false);
+	
+	LOG_MSG(TestPlayfab, *ToString());
+}
+
+void ATestPlayfabPlayerController::OnServerLoginError(const PlayFab::FPlayFabCppError& inError)
+{
+	LOG_VERB(TestPlayfab, Error, TEXT("error %s"), *inError.GenerateErrorReport());
+}
+
 void ATestPlayfabPlayerController::LoginAsPlayer(const FString& InName)
 {
 	PlayerName_ = InName;
 
-	UPlayFabUtilities::setPlayFabSettings(GetTitleId(), GetDefaultSecretKey());
+	UPlayFabUtilities::setPlayFabSettings(GetTitleId(), TEXT(""));
 	
 	Login();
 }

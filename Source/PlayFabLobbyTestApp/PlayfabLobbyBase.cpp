@@ -4,6 +4,7 @@
 #include "PlayfabLobbyBase.h"
 #include "LogUtility.h"
 #include "PlayFabMultiplayerAPI.h"
+#include "PlayFabServerAPI.h"
 #include "PubSubRequester.h"
 
 DEFINE_LOG_CATEGORY_STATIC(PlayfabLobbyBase, Log, All);
@@ -19,6 +20,37 @@ void UPlayfabLobbyBase::BeginDestroy()
 void UPlayfabLobbyBase::Init(IPlayfabDataProvider* InDataProvider)
 {
 	DataProvider_ = InDataProvider;
+}
+
+void UPlayfabLobbyBase::RegisterGame()
+{
+	LOG_FUNC_LABEL(PlayfabLobbyBase);
+
+	PlayFab::ServerModels::FRegisterGameRequest Request;
+
+	//Request.Build - only for Playfab servers
+
+	PlayFab::UPlayFabServerAPI::FRegisterGameDelegate OnSuccess;
+	OnSuccess.BindUObject(this, &UPlayfabLobbyBase::OnRegisterGame);
+	PlayFab::FPlayFabErrorDelegate OnError;
+	OnError.BindUObject(this, &UPlayfabLobbyBase::OnRegisterGameError);
+	const bool RequestResult = PlayFab::UPlayFabServerAPI().RegisterGame(Request, OnSuccess, OnError);
+
+	const FString RequestString = Request.toJSONString();
+	LOG_MSGF(PlayfabLobbyBase, TEXT("RequestResult: %d; RequestString: %s"), RequestResult, *RequestString);
+}
+
+void UPlayfabLobbyBase::OnRegisterGame(const PlayFab::ServerModels::FRegisterGameResponse& InResult)
+{
+	LobbyId_ = InResult.LobbyId;
+	//LobbyConnectionString_ = InResult.ConnectionString;
+
+	LOG_MSGF(PlayfabLobbyBase, TEXT("LobbyId_: %d; LobbyConnectionString_: %s"), *LobbyId_, *LobbyConnectionString_);
+}
+
+void UPlayfabLobbyBase::OnRegisterGameError(const PlayFab::FPlayFabCppError& InError)
+{
+	LOG_VERB(PlayfabLobbyBase, Error, TEXT("%s"), *InError.GenerateErrorReport());
 }
 
 #pragma region CreateLobby
